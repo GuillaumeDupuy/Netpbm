@@ -8,13 +8,13 @@ import (
 )
 
 type PBM struct {
-	data          [][]bool
-	width, height int
-	magicNumber   string
+	Data          [][]bool
+	Width, Height int
+	MagicNumber   string
 }
 
 // ReadPBM reads a PBM image from a file and returns a struct that represents the image.
-func ReadPBM(filename string) (*PBM, error){
+func ReadPBM(filename string) (*PBM, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func ReadPBM(filename string) (*PBM, error){
 
 	// Read magic number
 	if scanner.Scan() {
-		pbm.magicNumber = scanner.Text()
+		pbm.MagicNumber = scanner.Text()
 	} else {
 		return nil, fmt.Errorf("invalid PBM file: missing magic number")
 	}
@@ -40,42 +40,42 @@ func ReadPBM(filename string) (*PBM, error){
 			continue
 		}
 
-		fmt.Sscanf(line, "%d %d", &pbm.width, &pbm.height)
+		fmt.Sscanf(line, "%d %d", &pbm.Width, &pbm.Height)
 		break
 	}
 
 	// Read data
-	data := make([][]bool, pbm.height)
+	data := make([][]bool, pbm.Height)
 	for i := range data {
-		data[i] = make([]bool, pbm.width)
+		data[i] = make([]bool, pbm.Width)
 	}
 
-	switch pbm.magicNumber {
+	switch pbm.MagicNumber {
 	case "P1":
-		for i := 0; i < pbm.height; i++ {
+		for i := 0; i < pbm.Height; i++ {
 			scanner.Scan()
-			line := scanner.Text()
-			for j, c := range line {
-				if c == '1' {
+			line := strings.Fields(scanner.Text()) // Split the line into fields
+			for j, val := range line {
+				if val == "1" {
 					data[i][j] = true
-				} else if c != '0' {
-					return nil, fmt.Errorf("invalid PBM file: invalid character '%c'", c)
+				} else if val != "0" {
+					return nil, fmt.Errorf("invalid PBM file: invalid character '%s'", val)
 				}
 			}
 		}
 	case "P4":
-		for i := 0; i < pbm.height; i++ {
+		for i := 0; i < pbm.Height; i++ {
 			scanner.Scan()
 			line := scanner.Bytes()
-			for j := 0; j < pbm.width; j++ {
+			for j := 0; j < pbm.Width; j++ {
 				if line[j/8]&(1<<(7-uint(j%8))) != 0 {
 					data[i][j] = true
 				}
 			}
 		}
 	default:
-		return nil, fmt.Errorf("invalid PBM file: invalid magic number '%s'", pbm.magicNumber)
+		return nil, fmt.Errorf("invalid PBM file: invalid magic number '%s'", pbm.MagicNumber)
 	}
-	
+
 	return &pbm, nil
 }
